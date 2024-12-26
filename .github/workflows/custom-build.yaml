@@ -16,17 +16,30 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: main
+          fetch-depth: 0  # Add this to fetch complete history
 
       - name: Configure Git
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
+      # First, save your custom assets
+      - name: Backup custom assets
+        run: |
+          mkdir -p /tmp/custom-assets
+          cp -r custom-assets/* /tmp/custom-assets/
+
       - name: Sync with upstream
         run: |
           git remote add upstream https://github.com/Fallenbagel/jellyseerr.git
           git fetch upstream
           git reset --hard upstream/main
+
+      # Restore your custom assets
+      - name: Restore custom assets
+        run: |
+          mkdir -p custom-assets
+          cp -r /tmp/custom-assets/* custom-assets/
 
       - name: Replace logo files and references
         run: |
