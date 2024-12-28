@@ -12,42 +12,22 @@ jobs:
   update-and-build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout upstream directly
         uses: actions/checkout@v3
         with:
+          repository: Fallenbagel/jellyseerr
           ref: main
-          fetch-depth: 0  # Add this to fetch complete history
 
-      - name: Configure Git
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-
-      # First, save your custom assets
-      - name: Backup custom assets
-        run: |
-          mkdir -p /tmp/custom-assets
-          cp -r custom-assets/* /tmp/custom-assets/
-
-      - name: Sync with upstream
-        run: |
-          git remote add upstream https://github.com/Fallenbagel/jellyseerr.git
-          git fetch upstream
-          git reset --hard upstream/main
-
-      # Restore your custom assets
-      - name: Restore custom assets
+      - name: Copy custom assets
         run: |
           mkdir -p custom-assets
-          cp -r /tmp/custom-assets/* custom-assets/
+          curl -o custom-assets/logo_full.png https://raw.githubusercontent.com/AIndoria/vespera/main/custom-assets/logo_full.png
+          curl -o custom-assets/logo_stacked.png https://raw.githubusercontent.com/AIndoria/vespera/main/custom-assets/logo_stacked.png
 
       - name: Replace logo files and references
         run: |
-          # Replace physical files
           cp custom-assets/logo_full.png public/images/logo_full.svg
           cp custom-assets/logo_stacked.png public/images/logo_stacked.svg
-          
-          # Find and replace all references in files
           find . -type f -exec sed -i 's/logo_full\.svg/logo_full.png/g' {} +
           find . -type f -exec sed -i 's/logo_stacked\.svg/logo_stacked.png/g' {} +
 
@@ -74,9 +54,3 @@ jobs:
             COMMIT_TAG=${{ github.sha }}
           tags: |
             aindoria/vespera:latest
-
-      - name: Push changes back to fork
-        run: |
-          git add .
-          git commit -m "Auto-update from upstream and replace logos" || echo "No changes to commit"
-          git push -f origin main
