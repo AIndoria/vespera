@@ -26,19 +26,20 @@ jobs:
 
       - name: Replace logo files and references
         run: |
-          # Copy to public/images with both extensions
-          cp custom-assets/logo_full.png public/images/logo_full.svg
+          mkdir -p public/images
+          # Copy PNGs to both locations
           cp custom-assets/logo_full.png public/images/logo_full.png
-          cp custom-assets/logo_stacked.png public/images/logo_stacked.svg
           cp custom-assets/logo_stacked.png public/images/logo_stacked.png
-          
-          cp custom-assets/logo_full.png public/logo_full.svg
           cp custom-assets/logo_full.png public/logo_full.png
-          cp custom-assets/logo_stacked.png public/logo_stacked.svg
           cp custom-assets/logo_stacked.png public/logo_stacked.png
           
-          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_full.svg"|"/images/logo_full.svg?v=custom"|g' {} +
-          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_stacked.svg"|"/images/logo_stacked.svg?v=custom"|g' {} +
+          # Update references with cache-busting
+          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_full.png"|"/images/logo_full.png?v=custom"|g' {} +
+          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_stacked.png"|"/images/logo_stacked.png?v=custom"|g' {} +
+          
+          # Also update any remaining SVG references to PNG with cache-busting
+          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_full.svg"|"/images/logo_full.png?v=custom"|g' {} +
+          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_stacked.svg"|"/images/logo_stacked.png?v=custom"|g' {} +
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
