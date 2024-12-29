@@ -12,34 +12,29 @@ jobs:
   update-and-build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout upstream directly
+      - name: Checkout upstream (Fallenbagel/jellyseerr repository)
         uses: actions/checkout@v3
         with:
           repository: Fallenbagel/jellyseerr
           ref: main
 
-      - name: Copy custom assets
+      - name: Copy custom assets from your repository
         run: |
-          mkdir -p custom-assets
+          mkdir -p custom-assets public/images public/
           curl -o custom-assets/logo_full.png https://raw.githubusercontent.com/AIndoria/vespera/main/custom-assets/logo_full.png
           curl -o custom-assets/logo_stacked.png https://raw.githubusercontent.com/AIndoria/vespera/main/custom-assets/logo_stacked.png
-
-      - name: Replace logo files and references
-        run: |
-          mkdir -p public/images
-          # Copy PNGs to both locations
           cp custom-assets/logo_full.png public/images/logo_full.png
           cp custom-assets/logo_stacked.png public/images/logo_stacked.png
           cp custom-assets/logo_full.png public/logo_full.png
           cp custom-assets/logo_stacked.png public/logo_stacked.png
-          
-          # Update references with cache-busting
-          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_full.png"|"/images/logo_full.png?v=custom"|g' {} +
-          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_stacked.png"|"/images/logo_stacked.png?v=custom"|g' {} +
-          
-          # Also update any remaining SVG references to PNG with cache-busting
-          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_full.svg"|"/images/logo_full.png?v=custom"|g' {} +
-          find ./src -type f -name "*.tsx" -exec sed -i 's|"/images/logo_stacked.svg"|"/images/logo_stacked.png?v=custom"|g' {} +
+
+      - name: Update references for logos
+        run: |
+          # Replace all instances of logo_full.svg/stacked.svg with .png across the project
+          find . -type f \( -name "*.tsx" -o -name "*.jsx" -o -name "*.html" -o -name "*.js" \) \
+            -exec sed -i 's|logo_full\.svg|logo_full.png|g' {} +
+          find . -type f \( -name "*.tsx" -o -name "*.jsx" -o -name "*.html" -o -name "*.js" \) \
+            -exec sed -i 's|logo_stacked\.svg|logo_stacked.png|g' {} +
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -53,7 +48,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
